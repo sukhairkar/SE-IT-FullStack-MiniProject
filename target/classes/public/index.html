@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookHaven — Editorial Bookstore Management & POS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Top Minimalist App Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <a href="#" class="brand-logo" onclick="switchTab('pos'); return false;">
+                <span class="brand-title">
+                    BOOKHAVEN
+                    <span class="version-badge">RETAIL POS</span>
+                </span>
+            </a>
+
+            <!-- Editorial Underline Navigation Tabs -->
+            <nav class="nav-tabs" id="navTabs">
+                <button class="nav-tab active" data-tab="pos" id="tabPos">
+                    <span>Shelves & Catalog</span>
+                </button>
+                <button class="nav-tab" data-tab="holds" id="tabHolds">
+                    <span>Pickup Holds</span>
+                    <span class="badge-mini" id="holdsCountBadge">0</span>
+                </button>
+                <button class="nav-tab" data-tab="inventory" id="tabInventory">
+                    <span>Inventory</span>
+                </button>
+                <button class="nav-tab" data-tab="dashboard" id="tabDashboard">
+                    <span>Analytics</span>
+                </button>
+                <button class="nav-tab" data-tab="customers" id="tabCustomers">
+                    <span>Customers</span>
+                </button>
+                <button class="nav-tab" data-tab="employees" id="tabEmployees">
+                    <span>Staff</span>
+                </button>
+                <button class="nav-tab" data-tab="orders" id="tabOrders">
+                    <span id="ordersTabLabel">Sales Audit</span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="header-right">
+            <!-- User Role Widget -->
+            <div class="auth-widget" id="authWidget">
+                <span class="role-pill" id="userRoleBadge">
+                    <span id="roleLabel">Guest</span>
+                </span>
+                <button class="auth-btn-link" id="openLoginModalBtn">
+                    <span id="loginBtnText">Sign In</span>
+                </button>
+                <button class="auth-btn-link logout-link hidden" id="logoutBtn" title="Sign out of current account">
+                    Log Out
+                </button>
+            </div>
+
+            <!-- Cashier Counter Register Trigger Button -->
+            <button class="cart-trigger-btn" id="openCartBtn" title="Open Cashier Billing Register">
+                <span id="cartBtnLabel">REGISTER</span>
+                <span class="cart-count-badge" id="cartCountBadge">0</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-container">
+
+        <!-- ================= SECTION 1: POS CATALOG ================= -->
+        <section class="tab-pane active" id="panePos">
+            <div class="toolbar">
+                <div class="search-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                    </svg>
+                    <input type="text" id="searchInput" placeholder="Search catalog by title, author, genre..."
+                        autocomplete="off">
+                    <button class="clear-search-btn" id="clearSearchBtn" title="Clear">&times;</button>
+                </div>
+
+                <div class="filter-group filter-pills">
+                    <button class="pill active" data-filter="all">All</button>
+                    <button class="pill pill-alert" data-filter="lowStock" id="lowStockPill">Low Stock (&le; 5)</button>
+                    <button class="pill" data-filter="Software Engineering">Software Eng.</button>
+                    <button class="pill" data-filter="Computer Science">Computer Science</button>
+                    <button class="pill" data-filter="Fiction">Fiction</button>
+                </div>
+            </div>
+
+            <!-- Results Meta Bar -->
+            <div class="results-meta">
+                <span id="resultsCount">Loading physical catalog...</span>
+                <span class="store-status-indicator"
+                    style="font-size: 0.78rem; color: var(--action-success); font-weight: 600; display: inline-flex; align-items: center; gap: 0.35rem;">
+                    <span
+                        style="width: 7px; height: 7px; background: var(--action-success); border-radius: 50%; display: inline-block;"></span>
+                    In-Store Browsing Active • Shelf Locations Displayed
+                </span>
+                <button class="btn-quiet" id="refreshCatalogBtn" title="Reload from MySQL">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                        <path d="M21 3v5h-5" />
+                        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                        <path d="M8 16H3v5" />
+                    </svg>
+                    Refresh
+                </button>
+            </div>
+
+            <!-- Books Visual Bookshelf Grid -->
+            <div class="books-grid" id="booksGrid">
+                <!-- Injected dynamically by app.js -->
+            </div>
+        </section>
+
+        <!-- ================= SECTION: IN-STORE PICKUP HOLDS QUEUE ================= -->
+        <section class="tab-pane" id="paneHolds">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-heading">In-Store Pickup Holds Queue</h2>
+                    <p class="section-subheading">Active customer reservations held behind the cashier billing desk
+                        (48-hour shelf hold limit). Pay upon in-store collection.</p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm" id="refreshHoldsBtn" title="Refresh active holds">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                            <path d="M21 3v5h-5" />
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                            <path d="M8 16H3v5" />
+                        </svg>
+                        Refresh Holds
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="holdsTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 110px;">Hold Code</th>
+                            <th>Customer Name</th>
+                            <th>Contact (Phone/Email)</th>
+                            <th>Reserved Title</th>
+                            <th>Shelf Location</th>
+                            <th style="width: 95px;">Price</th>
+                            <th>Pickup Window</th>
+                            <th style="width: 95px;">Status</th>
+                            <th style="width: 210px; text-align: center;">Counter Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="holdsTableBody">
+                        <!-- Injected dynamically by app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: INVENTORY & RESTOCK ================= -->
+        <section class="tab-pane" id="paneInventory">
+            <!-- Owner Overview Metrics Bar (4 Minimalist Stat Tiles) -->
+            <div class="owner-metrics-bar" id="ownerMetricsBar">
+                <div class="owner-metric-tile">
+                    <span class="metric-label">Total Catalog Size</span>
+                    <span class="metric-val" id="metricTotalCatalog">0</span>
+                    <span class="metric-sub" id="metricActiveCatalog">0 active titles</span>
+                </div>
+                <div class="owner-metric-tile" id="metricLowStockTile">
+                    <span class="metric-label">Low Stock Count (&lt; 5)</span>
+                    <span class="metric-val" id="metricLowStock">0</span>
+                    <span class="metric-sub">Needs replenishment</span>
+                </div>
+                <div class="owner-metric-tile highlight">
+                    <span class="metric-label">Today's Sales Volume</span>
+                    <span class="metric-val" id="metricTodaySales">₹0.00</span>
+                    <span class="metric-sub" id="metricTodayOrders">0 orders today</span>
+                </div>
+                <div class="owner-metric-tile">
+                    <span class="metric-label">Total Orders</span>
+                    <span class="metric-val" id="metricTotalOrders">0</span>
+                    <span class="metric-sub" id="metricTotalSales">All-time settled</span>
+                </div>
+            </div>
+
+            <div class="section-header" style="margin-top: 1.5rem;">
+                <div>
+                    <h2 class="section-heading">Catalog Lifecycle & Inventory Management</h2>
+                    <p class="section-subheading">Live inventory levels from MySQL with atomic stock adjustment,
+                        metadata editing, and soft-delete archiving.</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <button class="btn btn-secondary btn-sm" id="refreshInventoryBtn"
+                        title="Reload inventory from database">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                            <path d="M21 3v5h-5" />
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                            <path d="M8 16H3v5" />
+                        </svg>
+                        Refresh
+                    </button>
+                    <button class="btn btn-primary btn-sm" id="openAddBookModalBtn">
+                        + Add New Title
+                    </button>
+                </div>
+            </div>
+
+            <!-- Toolbar with Search & Status Filters -->
+            <div class="toolbar" style="margin-bottom: 1rem;">
+                <div class="search-box">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                    </svg>
+                    <input type="text" id="inventorySearchInput"
+                        placeholder="Filter inventory by title, author, or publisher..." autocomplete="off">
+                    <button class="clear-search-btn" id="clearInventorySearchBtn" title="Clear">&times;</button>
+                </div>
+
+                <div class="filter-group filter-pills">
+                    <button class="pill active" data-inv-filter="all">All Titles</button>
+                    <button class="pill" data-inv-filter="active">Active Only</button>
+                    <button class="pill" data-inv-filter="archived">Archived Only</button>
+                    <button class="pill pill-alert" data-inv-filter="lowStock">Low Stock (&le; 5)</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 75px;">Code/ID</th>
+                            <th>Title</th>
+                            <th>Authors</th>
+                            <th>Publisher</th>
+                            <th style="width: 95px;">Price</th>
+                            <th style="width: 80px;">Stock</th>
+                            <th style="width: 100px;">Status</th>
+                            <th style="width: 220px; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <!-- Injected dynamically by app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: SALES DASHBOARD ================= -->
+        <section class="tab-pane" id="paneDashboard">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-heading">Sales & Revenue Analytics</h2>
+                    <p class="section-subheading">Real-time KPI metrics computed from settled transactions and
+                        relational checkout orders.</p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm" id="refreshDashboardBtn">
+                        Refresh Metrics
+                    </button>
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card highlight">
+                    <div class="kpi-title">Gross Revenue</div>
+                    <div class="kpi-val" id="kpiTotalRevenue">₹0.00</div>
+                    <div class="kpi-subtext">All-time settled revenue</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-title">Today's Sales</div>
+                    <div class="kpi-val" id="kpiTodayRevenue">₹0.00</div>
+                    <div class="kpi-subtext" id="kpiTodayOrdersCount">0 orders processed today</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-title">Total Orders</div>
+                    <div class="kpi-val" id="kpiTotalOrders">0</div>
+                    <div class="kpi-subtext">Atomic checkout transactions</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-title">Books Sold</div>
+                    <div class="kpi-val" id="kpiBooksSold">0</div>
+                    <div class="kpi-subtext">Physical units decremented from stock</div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-title">Avg Order Value</div>
+                    <div class="kpi-val" id="kpiAvgOrderValue">₹0.00</div>
+                    <div class="kpi-subtext">Per completed transaction</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: CUSTOMERS CRM ================= -->
+        <section class="tab-pane" id="paneCustomers">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-heading">Customer CRM Directory</h2>
+                    <p class="section-subheading">Registered book buyers, email addresses, and shipping locations from
+                        <code>CUSTOMER</code>.</p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm" id="refreshCustomersBtn">
+                        Refresh Customers
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="customersTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer Name</th>
+                            <th>Email Address</th>
+                            <th>Street Address</th>
+                            <th>City</th>
+                            <th>Pincode</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                        <!-- Injected dynamically by app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 5: STAFF MANAGEMENT (ADMIN) ================= -->
+        <section class="tab-pane" id="paneEmployees">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-heading">Staff & Cashier Administration</h2>
+                    <p class="section-subheading">Employee roles, compensation, and store station permissions (Admin
+                        access only).</p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm" id="refreshEmployeesBtn">
+                        Refresh Staff
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="employeesTable">
+                    <thead>
+                        <tr>
+                            <th>Staff ID</th>
+                            <th>Employee Name</th>
+                            <th>Designated Role</th>
+                            <th>Monthly Salary</th>
+                            <th>System Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employeesTableBody">
+                        <!-- Injected dynamically by app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 6: ORDERS & RECEIPTS ================= -->
+        <section class="tab-pane" id="paneOrders">
+            <div class="section-header">
+                <div>
+                    <h2 class="section-heading" id="ordersSectionTitle">Order History & Receipt Audit</h2>
+                    <p class="section-subheading" id="ordersSectionSubtitle">Audit past transactions, verified payment
+                        methods, and resend digital OpenPDF receipts.</p>
+                </div>
+                <div>
+                    <button class="btn btn-secondary btn-sm" id="refreshOrdersBtn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                            <path d="M21 3v5h-5" />
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                            <path d="M8 16H3v5" />
+                        </svg>
+                        Refresh Orders
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th style="width: 80px;">Order #</th>
+                            <th>Date & Time</th>
+                            <th>Customer Name</th>
+                            <th>Customer Email</th>
+                            <th style="width: 105px;">Payment</th>
+                            <th style="width: 65px;">Units</th>
+                            <th style="width: 110px;">Total (₹)</th>
+                            <th>Purchased Books</th>
+                            <th style="width: 210px; text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <!-- Injected dynamically by app.js -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ================= SLIDE-OVER CASHIER BILLING REGISTER ================= -->
+    <div class="cart-backdrop" id="cartBackdrop"></div>
+    <aside class="cart-drawer" id="cartDrawer">
+        <div class="cart-drawer-header">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="20" height="14" x="2" y="5" rx="2" />
+                    <line x1="2" x2="22" y1="10" y2="10" />
+                </svg>
+                <h3 style="font-size: 0.95rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                    Cashier Billing Register</h3>
+            </div>
+            <button class="close-btn" id="closeCartBtn">&times;</button>
+        </div>
+
+        <div class="cart-drawer-body">
+            <!-- Active Hold Link Banner (if fulfilling a hold) -->
+            <div id="registerHoldBanner" class="hidden"
+                style="background: #fefce8; border: 1px solid #fef08a; padding: 0.6rem 0.75rem; border-radius: var(--radius-sm); margin-bottom: 0.75rem; font-size: 0.78rem; display: flex; justify-content: space-between; align-items: center;">
+                <span>Fulfilling Hold: <strong id="registerHoldCode">HLD-1000</strong></span>
+                <button type="button" class="btn-quiet" id="clearRegisterHoldBtn"
+                    style="color: var(--action-danger); font-size: 0.72rem;">Clear Hold</button>
+            </div>
+
+            <!-- Items list brought to the billing counter -->
+            <div class="cart-items" id="cartItemsList">
+                <div class="empty-cart-state">
+                    <p>Counter register is empty.</p>
+                    <span class="subtext">Click "+ Add to Register" on books brought to the billing desk.</span>
+                </div>
+            </div>
+
+            <!-- Customer & Cashier Counter Section -->
+            <div class="checkout-form-section" id="checkoutFormSection"
+                style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border-light);">
+                <div class="form-group" style="margin-bottom: 0.5rem;">
+                    <label for="cashierSelect">Attending Cashier (Staff / Counter Station)</label>
+                    <select id="cashierSelect" class="form-control">
+                        <!-- Populated by app.js -->
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-top: 0.85rem;">
+                    <label for="customerSelect">Customer (Loyalty Lookup)</label>
+                    <select id="customerSelect" class="form-control">
+                        <!-- Populated by app.js -->
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 0.75rem;">
+                    <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; cursor: pointer;">
+                        <input type="checkbox" id="newCustomerCheckbox" checked
+                            style="accent-color: var(--action-black);">
+                        <span>Walk-in Customer (Instant Digital Receipt)</span>
+                    </label>
+                </div>
+
+                <div class="new-customer-fields" id="newCustomerFields"
+                    style="background: var(--bg-subtle); padding: 0.75rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
+                    <div class="form-row">
+                        <div class="form-group" style="margin-bottom: 0.5rem; flex: 1;">
+                            <label>First Name</label>
+                            <input type="text" id="custFirstName" class="form-control" placeholder="Walk-in Shopper"
+                                value="Walk-in">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0.5rem; flex: 1;">
+                            <label>Last Name</label>
+                            <input type="text" id="custLastName" class="form-control" placeholder="Customer"
+                                value="Customer">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0.5rem;">
+                        <label>Customer Mobile / WhatsApp (Optional)</label>
+                        <input type="tel" id="custPhone" class="form-control" placeholder="+91 98765 43210">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Customer Email (For Instant OpenPDF Invoice)</label>
+                        <input type="email" id="custEmail" class="form-control" placeholder="customer@example.com">
+                    </div>
+                </div>
+
+                <!-- Digital Receipt Email Toggle -->
+                <div class="email-receipt-toggle-box">
+                    <input type="checkbox" id="sendEmailReceiptCheckbox" checked>
+                    <div>
+                        <span class="toggle-text">Dispatch OpenPDF receipt via email</span>
+                        <span class="toggle-hint">Sends generated receipt to customer email upon counter
+                            settlement.</span>
+                    </div>
+                </div>
+
+                <!-- In-Store Counter Payment Method Selector -->
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Counter Payment Method</label>
+                    <div class="payment-method-selector">
+                        <label class="payment-option active">
+                            <input type="radio" name="payMethod" value="CASH" checked>
+                            <span>💵 Cash</span>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payMethod" value="CREDIT_CARD">
+                            <span>💳 Card POS</span>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payMethod" value="UPI">
+                            <span>📱 Store UPI</span>
+                        </label>
+                    </div>
+
+                    <!-- Cash Drawer Tender Calculator -->
+                    <div id="cashTenderBox" class="cash-tender-box">
+                        <div class="form-row" style="display: flex; gap: 0.5rem; align-items: center;">
+                            <div class="form-group" style="flex: 1; margin: 0;">
+                                <label style="font-size: 0.75rem;">Cash Tendered (₹)</label>
+                                <input type="number" id="cashTenderedInput" class="form-control" placeholder="0.00"
+                                    step="1">
+                            </div>
+                            <div class="change-display-box" style="flex: 1;">
+                                <span class="change-label">Change Due</span>
+                                <span class="change-value" id="cashChangeDue">₹0.00</span>
+                            </div>
+                        </div>
+                        <div class="quick-tender-chips">
+                            <button type="button" class="tender-chip" id="tenderExactBtn">Exact</button>
+                            <button type="button" class="tender-chip" data-tender="100">+₹100</button>
+                            <button type="button" class="tender-chip" data-tender="500">+₹500</button>
+                            <button type="button" class="tender-chip" data-tender="2000">+₹2000</button>
+                        </div>
+                    </div>
+
+                    <!-- Card Terminal Note -->
+                    <div id="cardDetailsBox" class="payment-extra-box hidden">
+                        <div class="counter-notice">
+                            <span class="notice-icon">💳</span>
+                            <div>
+                                <strong>Swipe / Tap on In-Store Card Terminal</strong>
+                                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">Process via counter
+                                    EDC machine.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- UPI QR Note -->
+                    <div id="upiDetailsBox" class="payment-extra-box hidden">
+                        <div class="counter-notice upi-notice">
+                            <span class="notice-icon">📱</span>
+                            <div>
+                                <strong>Counter UPI QR Code</strong>
+                                <p style="margin: 0; font-size: 0.75rem; color: var(--text-muted);">Ask customer to scan
+                                    BookHaven counter QR code.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cart-drawer-footer">
+            <div class="cart-summary-line">
+                <span style="color: var(--text-muted);">Total Units:</span>
+                <span class="num-cell" id="cartTotalQty">0</span>
+            </div>
+            <div class="cart-summary-line total">
+                <span>Bill Total:</span>
+                <span class="num-cell" id="cartTotalPrice">₹0.00</span>
+            </div>
+
+            <button class="btn btn-primary btn-block" id="executeCheckoutBtn" style="margin-top: 1rem;" disabled>
+                Settle Counter Bill & Print Receipt
+            </button>
+        </div>
+    </aside>
+
+    <!-- ================= CENTERED AUTH MODAL (SIGN IN / SIGN UP) ================= -->
+    <div class="modal-backdrop" id="loginModalBackdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" id="authModalTitle">Account Access</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Authenticate with
+                        email and password</p>
+                </div>
+                <button class="close-btn" id="closeLoginModalBtn">&times;</button>
+            </div>
+
+            <!-- Mode Switch Tabs: Sign In vs Sign Up -->
+            <div class="auth-tabs">
+                <button type="button" class="auth-tab-btn active" id="authTabSignIn">Sign In</button>
+                <button type="button" class="auth-tab-btn" id="authTabSignUp">Create Account</button>
+            </div>
+
+            <!-- Quick Demo Credentials Bar -->
+            <div class="demo-creds-bar" id="demoCredsBar">
+                <span class="demo-title">Quick Demo Logins</span>
+                <div class="demo-chips">
+                    <button type="button" class="demo-chip" id="quickLoginOwnerBtn"
+                        title="owner@bookstore.com / Owner@123">
+                        Owner
+                    </button>
+                    <!-- <button type="button" class="demo-chip" id="quickLoginAdminBtn" title="admin@bookstore.com / Admin@123">
+                        Admin
+                    </button> -->
+                    <button type="button" class="demo-chip" id="quickLoginCustomerBtn"
+                        title="reader@gmail.com / Reader@123">
+                        Customer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div class="error-banner hidden" id="loginErrorMsg"></div>
+
+            <!-- Manual Auth Form -->
+            <form id="manualLoginForm">
+                <div class="form-group">
+                    <label for="loginUsername">Email Address</label>
+                    <input type="email" id="loginUsername" class="form-control" placeholder="name@example.com" required
+                        autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required
+                        autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="submitLoginBtn" style="margin-top: 0.5rem;">
+                    Sign In
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= QUICK RESTOCK INLINE MODAL ================= -->
+    <div class="modal-backdrop" id="restockModalBackdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" id="restockModalTitle">Quick Restock & Adjustment</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Atomically adjust
+                        stock count with audit reason log</p>
+                </div>
+                <button class="close-btn" id="closeRestockModalBtn">&times;</button>
+            </div>
+            <div>
+                <div class="restock-summary-box" id="restockSummaryBox">
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem;" id="restockBookTitle">
+                        Book Title</div>
+                    <div
+                        style="font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span>Current Stock: <strong id="restockCurrentStock" class="num-cell"
+                                style="color: var(--text-main);">0</strong> units</span>
+                        <span>Projected: <strong id="restockProjectedStock" class="num-cell"
+                                style="color: var(--action-success);">0</strong> units</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label for="restockAddInput">Quantity Adjustment (+/- units)</label>
+                    <input type="number" id="restockAddInput" class="form-control" value="15" step="1">
+                </div>
+
+                <!-- Rapid Click Adjustment Chips -->
+                <div style="margin-bottom: 1rem;">
+                    <span
+                        style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: var(--text-faint); letter-spacing: 0.5px; display: block; margin-bottom: 0.35rem;">Quick
+                        Presets</span>
+                    <div class="quick-add-buttons">
+                        <button type="button" class="btn-chip" data-adjust="5">+5</button>
+                        <button type="button" class="btn-chip" data-adjust="10">+10</button>
+                        <button type="button" class="btn-chip active-chip" data-adjust="15">+15</button>
+                        <button type="button" class="btn-chip" data-adjust="25">+25</button>
+                        <button type="button" class="btn-chip" data-adjust="50">+50</button>
+                        <button type="button" class="btn-chip chip-negative" data-adjust="-1">-1 Damaged</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="restockReasonInput">Audit Reason *</label>
+                    <input type="text" id="restockReasonInput" class="form-control"
+                        placeholder="e.g. Warehouse restock shipment #482" value="Warehouse restock shipment">
+                </div>
+
+                <!-- Quick Reason Tags -->
+                <div class="reason-chips" id="quickReasonChips">
+                    <span class="reason-tag" data-reason="Warehouse restock shipment">Shipment Restock</span>
+                    <button type="button" class="reason-tag" data-reason="Supplier distributor delivery">Distributor
+                        Delivery</button>
+                    <button type="button" class="reason-tag" data-reason="Damaged copies discarded">Damaged
+                        Goods</button>
+                    <button type="button" class="reason-tag" data-reason="Periodic inventory physical audit">Physical
+                        Audit</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" id="cancelRestockBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmRestockBtn">Apply Adjustment</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ADD NEW TITLE MODAL (WITH INLINE AUTHOR & PUBLISHER FORMS) ================= -->
+    <div class="modal-backdrop" id="addBookModalBackdrop">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">Add New Title to Catalog</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Create book and assign
+                        publisher and authors</p>
+                </div>
+                <button class="close-btn" id="closeAddBookModalBtn">&times;</button>
+            </div>
+            <div class="modal-scroll-body">
+                <div class="form-group">
+                    <label for="newBookTitle">Book Title *</label>
+                    <input type="text" id="newBookTitle" class="form-control"
+                        placeholder="e.g. The Pragmatic Programmer" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="newBookPrice">Price (₹) *</label>
+                        <input type="number" id="newBookPrice" class="form-control" step="0.01" min="0.01"
+                            value="499.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newBookStock">Initial Stock *</label>
+                        <input type="number" id="newBookStock" class="form-control" min="0" value="15" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newBookGenre">Genre</label>
+                        <input type="text" id="newBookGenre" class="form-control"
+                            placeholder="e.g. Software Engineering" value="Software Engineering">
+                    </div>
+                </div>
+
+                <!-- Publisher Section with Quick Inline Form -->
+                <div class="entity-link-section">
+                    <div class="section-label-row">
+                        <label for="newBookPublisher">Publisher *</label>
+                        <button type="button" class="link-btn" id="toggleInlinePublisherBtn">+ New Publisher</button>
+                    </div>
+                    <select id="newBookPublisher" class="form-control">
+                        <!-- Populated dynamically by app.js -->
+                    </select>
+
+                    <!-- Collapsible Inline Micro-Form for New Publisher -->
+                    <div class="inline-subform hidden" id="inlinePublisherForm">
+                        <div class="inline-subform-header">
+                            <span>Quick Add Publisher</span>
+                            <button type="button" class="close-btn-xs" id="closeInlinePublisherBtn">&times;</button>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>Publisher Name *</label>
+                                <input type="text" id="inlinePubName" class="form-control form-control-sm"
+                                    placeholder="e.g. Addison-Wesley">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>Contact Phone</label>
+                                <input type="tel" id="inlinePubPhone" class="form-control form-control-sm"
+                                    placeholder="+91 9876543210">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>City</label>
+                                <input type="text" id="inlinePubCity" class="form-control form-control-sm"
+                                    placeholder="Bengaluru">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>Street</label>
+                                <input type="text" id="inlinePubStreet" class="form-control form-control-sm"
+                                    placeholder="Brigade Road">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>Pincode</label>
+                                <input type="text" id="inlinePubPincode" class="form-control form-control-sm"
+                                    placeholder="560001">
+                            </div>
+                        </div>
+                        <div style="text-align: right; margin-top: 0.4rem;">
+                            <button type="button" class="btn btn-secondary btn-xs" id="saveInlinePubBtn">Save & Select
+                                Publisher</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Authors Multi-Select Section with Quick Inline Form -->
+                <div class="entity-link-section" style="margin-top: 1rem;">
+                    <div class="section-label-row">
+                        <label>Authors (Select one or more) *</label>
+                        <button type="button" class="link-btn" id="toggleInlineAuthorBtn">+ New Author</button>
+                    </div>
+
+                    <div class="search-box-sm">
+                        <input type="text" id="authorSearchFilter" class="form-control form-control-sm"
+                            placeholder="Search authors..." autocomplete="off">
+                    </div>
+
+                    <div class="checkbox-chips-container" id="newBookAuthorsList">
+                        <!-- Populated dynamically by app.js -->
+                    </div>
+
+                    <!-- Collapsible Inline Micro-Form for New Author -->
+                    <div class="inline-subform hidden" id="inlineAuthorForm">
+                        <div class="inline-subform-header">
+                            <span>Quick Add Author</span>
+                            <button type="button" class="close-btn-xs" id="closeInlineAuthorBtn">&times;</button>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>First Name *</label>
+                                <input type="text" id="inlineAuthorFirstName" class="form-control form-control-sm"
+                                    placeholder="Andy">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>Last Name *</label>
+                                <input type="text" id="inlineAuthorLastName" class="form-control form-control-sm"
+                                    placeholder="Hunt">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>Email Address</label>
+                                <input type="email" id="inlineAuthorEmail" class="form-control form-control-sm"
+                                    placeholder="andy@pragprog.com">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.4rem;">
+                                <label>Short Biography</label>
+                                <input type="text" id="inlineAuthorBio" class="form-control form-control-sm"
+                                    placeholder="Co-author of The Pragmatic Programmer">
+                            </div>
+                        </div>
+                        <div style="text-align: right; margin-top: 0.4rem;">
+                            <button type="button" class="btn btn-secondary btn-xs" id="saveInlineAuthorBtn">Save &
+                                Select Author</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" id="cancelAddBookBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmAddBookBtn">Save New Title</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= EDIT TITLE MODAL ================= -->
+    <div class="modal-backdrop" id="editBookModalBackdrop">
+        <div class="modal-box modal-lg">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title" id="editBookModalTitle">Edit Book Details</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">Update metadata,
+                        publisher, author assignments, and active status</p>
+                </div>
+                <button class="close-btn" id="closeEditBookModalBtn">&times;</button>
+            </div>
+            <div class="modal-scroll-body">
+                <input type="hidden" id="editBookId">
+
+                <div class="form-group">
+                    <label for="editBookTitle">Book Title *</label>
+                    <input type="text" id="editBookTitle" class="form-control" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="editBookPrice">Price (₹) *</label>
+                        <input type="number" id="editBookPrice" class="form-control" step="0.01" min="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBookStock">Stock Count *</label>
+                        <input type="number" id="editBookStock" class="form-control" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="editBookGenre">Genre</label>
+                        <input type="text" id="editBookGenre" class="form-control">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label for="editBookPublisher">Publisher *</label>
+                        <select id="editBookPublisher" class="form-control">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="editBookStatus">Catalog Status</label>
+                        <select id="editBookStatus" class="form-control">
+                            <option value="true">Active (Visible in POS)</option>
+                            <option value="false">Archived (Hidden from POS)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="entity-link-section">
+                    <div class="section-label-row">
+                        <label>Assigned Authors *</label>
+                    </div>
+                    <div class="checkbox-chips-container" id="editBookAuthorsList">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" id="cancelEditBookBtn">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmEditBookBtn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= IN-STORE SHELF HOLD & PICKUP RESERVATION MODAL ================= -->
+    <div class="modal-backdrop" id="holdModalBackdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">📍 Reserve for In-Store Pickup</h3>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-top: 0.15rem;">We hold this physical
+                        copy behind our billing counter for 48 hours</p>
+                </div>
+                <button class="close-btn" id="closeHoldModalBtn">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1.25rem;">
+                <div id="holdBookPreviewCard" class="hold-book-preview">
+                    <!-- Injected dynamically by app.js -->
+                </div>
+
+                <div class="offline-store-notice"
+                    style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 0.75rem 0.85rem; border-radius: var(--radius-sm); margin: 0.85rem 0; font-size: 0.8rem; color: #1e40af;">
+                    💡 <strong>No advance payment required.</strong> Pay via Cash, Card, or UPI at the store billing
+                    desk upon collection.
+                </div>
+
+                <form id="holdReservationForm">
+                    <input type="hidden" id="holdBookId">
+                    <div class="form-group" style="margin-bottom: 0.75rem;">
+                        <label for="holdCustName">Your Full Name *</label>
+                        <input type="text" id="holdCustName" class="form-control" placeholder="e.g. Rahul Sharma"
+                            required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 1; margin-bottom: 0.75rem;">
+                            <label for="holdCustPhone">Mobile Number (for pickup SMS) *</label>
+                            <input type="tel" id="holdCustPhone" class="form-control" placeholder="+91 98765 43210"
+                                required>
+                        </div>
+                        <div class="form-group" style="flex: 1; margin-bottom: 0.75rem;">
+                            <label for="holdCustEmail">Email (for Hold Slip code)</label>
+                            <input type="email" id="holdCustEmail" class="form-control" placeholder="rahul@example.com">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 1rem;">
+                        <label for="holdPickupWindow">Estimated In-Store Pickup Time</label>
+                        <select id="holdPickupWindow" class="form-control">
+                            <option value="TODAY_4_HOURS">Today within 4 hours</option>
+                            <option value="TODAY_EVENING" selected>Today by 8:00 PM</option>
+                            <option value="TOMORROW">Tomorrow during store hours (10 AM - 9 PM)</option>
+                            <option value="WEEKEND">This Weekend</option>
+                        </select>
+                    </div>
+                    <div class="modal-footer"
+                        style="padding: 0; display: flex; justify-content: flex-end; gap: 0.5rem;">
+                        <button type="button" class="btn btn-secondary" id="cancelHoldBtn">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="confirmHoldBtn">Confirm In-Store Hold</button>
+                    </div>
+                </form>
+
+                <!-- Success Hold Slip View -->
+                <div id="holdSuccessView" class="hidden" style="text-align: center; padding: 0.5rem 0;">
+                    <div style="font-size: 2.2rem; margin-bottom: 0.25rem;">🔖</div>
+                    <h4 style="font-weight: 800; color: var(--action-success); margin-bottom: 0.25rem;">In-Store
+                        Reservation Confirmed!</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.85rem;">A physical copy is
+                        set aside behind the billing desk.</p>
+
+                    <div class="hold-slip-card" id="holdSlipDetails">
+                        <!-- Injected dynamically -->
+                    </div>
+
+                    <button type="button" class="btn btn-primary btn-block" id="closeHoldSuccessBtn"
+                        style="margin-top: 1rem;">
+                        Done (Keep Browsing)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= ORDER SUCCESS MODAL ================= -->
+    <div class="modal-backdrop" id="orderSuccessBackdrop">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div>
+                    <h3 class="modal-title">Order Confirmed</h3>
+                    <p style="font-size: 0.78rem; color: var(--action-success); margin-top: 0.15rem; font-weight: 600;">
+                        Transaction committed atomically to MySQL</p>
+                </div>
+                <button class="close-btn" id="closeSuccessModalBtn">&times;</button>
+            </div>
+
+            <div id="successCardDetails" style="margin: 1rem 0;">
+                <!-- Injected dynamically by app.js -->
+            </div>
+
+            <div class="modal-footer" style="justify-content: space-between;">
+                <a href="#" target="_blank" class="btn btn-primary btn-sm" id="viewPdfInvoiceBtn">
+                    Download PDF Receipt
+                </a>
+                <button type="button" class="btn btn-secondary btn-sm" id="closeSuccessModalBtnBottom">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

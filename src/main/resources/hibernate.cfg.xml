@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+    <session-factory>
+        <!-- JDBC Database Connection Settings -->
+        <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/bookstore_db?createDatabaseIfNotExist=true&amp;useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=UTC</property>
+        <property name="hibernate.connection.username">root</property>
+        <!-- User's local MySQL password -->
+        <property name="hibernate.connection.password">localhost</property>
+
+        <!-- Hibernate SQL Dialect for MySQL 8/9 -->
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+
+        <!-- Automatic Schema Generation Mode -->
+        <property name="hibernate.hbm2ddl.auto">update</property>
+
+        <!-- Echo and Format all executed SQL queries to stdout -->
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.format_sql">true</property>
+        <property name="hibernate.highlight_sql">true</property>
+
+        <!-- Automatically quote SQL reserved keywords (e.g. ORDER, DATE, ROLE) -->
+        <property name="hibernate.auto_quote_keyword">true</property>
+
+        <!-- Connection Pool Settings (default mini-pool) -->
+        <property name="hibernate.connection.pool_size">10</property>
+        <property name="hibernate.current_session_context_class">thread</property>
+
+        <!-- Entity Class Mappings (All 13 Schema Entities) -->
+        <mapping class="com.bookstore.entity.Author"/>
+        <mapping class="com.bookstore.entity.Publisher"/>
+        <mapping class="com.bookstore.entity.PublisherContact"/>
+        <mapping class="com.bookstore.entity.Book"/>
+        <mapping class="com.bookstore.entity.Writes"/>
+        <mapping class="com.bookstore.entity.Customer"/>
+        <mapping class="com.bookstore.entity.CustomerPhone"/>
+        <mapping class="com.bookstore.entity.Order"/>
+        <mapping class="com.bookstore.entity.OrderBook"/>
+        <mapping class="com.bookstore.entity.Payment"/>
+        <mapping class="com.bookstore.entity.Employee"/>
+        <mapping class="com.bookstore.entity.EmployeePhone"/>
+        <mapping class="com.bookstore.entity.HandledBy"/>
+        <mapping class="com.bookstore.entity.User"/>
+        <mapping class="com.bookstore.entity.AppUser"/>
+        <mapping class="com.bookstore.entity.Bookstore"/>
+        <mapping class="com.bookstore.entity.StoreInventory"/>
+    </session-factory>
+</hibernate-configuration>
